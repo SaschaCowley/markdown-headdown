@@ -44,7 +44,7 @@ MARKDOWN = {
 
 Thanks are owed to the author of [mdx_downheader][p2], whose code I examined for inspiration; and the contributers to the [default python-markdown extensions][pmdx], whose code I examined to get a better idea of what the [manual][pmdapi] was talking about.
 
-This project is copyright 2018 by Sascha Cowley under the [MIT License](LICENSE).
+This project is copyright 2018-2020 by Sascha Cowley and contributors [MIT License](LICENSE).
 
 
 [pmd]: https://python-markdown.github.io/
