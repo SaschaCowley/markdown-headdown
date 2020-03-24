@@ -11,6 +11,7 @@ integerised.
 # Import relevant modules.
 from markdown.extensions import Extension
 from markdown.postprocessors import Postprocessor
+from xml.etree import ElementTree as ET
 import re
 
 name = "mdx_headdown"
@@ -22,13 +23,20 @@ class DowngradeHeadingsPostprocessor(Postprocessor):
         self.offset = abs(int(self.config['offset']))
 
         # Match headings 1-6 case insensitively, and capture the heading number.
-        heading_pattern = re.compile(r'<h([1-6])>([^<]*)</h\1>', re.I)
+        heading_pattern = re.compile(r'<h([1-6])[^>]*>([^<]*)</h\1>', re.I)
 
         return re.sub(heading_pattern, self.downgrade, text)
 
-    def downgrade(self, mo):
-        return '<h%(level)d>%(content)s</h%(level)d>' % \
-                {'level': min(6, int(mo.group(1)) + self.offset), 'content': mo.group(2) }
+    def downgrade(self, match):
+        element = ET.fromstring(match.group(0))
+
+        # Only process this heading if 'headdown="1"' (or missing...)
+        if element.attrib.get('headdown', 1) == 1:
+            # For all headings, increase their heading number by `offset`.
+            # If the new heading number is > 6, use 6 instead.
+            element.tag = 'h%d' % min(6, int(match.group(1))+self.offset)
+
+        return ET.tostring(element, encoding="unicode")
 
 class DowngradeHeadingsExtension(Extension):
     """ Setup the extension for usage. """
