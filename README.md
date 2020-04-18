@@ -40,14 +40,27 @@ MARKDOWN = {
 ...
 ```
 
+You can selectively disable processing of a particular heading by adding the `headdown="0"` attribute to it:
+
+```html
+<h1 headdown="1">This will remain level 1!</h1>
+```
+
+... or using the `attr_list` extension:
+```markdown
+# This one stays at level 1 { headdown='0' }
+```
+**Note**: This is analogous to how the [Markdown in HTML][pmd_mdinhtml] extension &ndash; within Python-Markdown Extra, that comes with Python-Markdown itself &ndash;  would allow you to enable markdown processing inside raw HTML blocks by inlcuding `markdown="1"`.
+
 ## Credit
 
 Thanks are owed to the author of [mdx_downheader][p2], whose code I examined for inspiration; and the contributers to the [default python-markdown extensions][pmdx], whose code I examined to get a better idea of what the [manual][pmdapi] was talking about.
 
-This project is copyright 2018 by Sascha Cowley under the [MIT License](LICENSE).
+This project is copyright 2018-2020 by Sascha Cowley and contributors [MIT License](LICENSE).
 
 
 [pmd]: https://python-markdown.github.io/
+[pmd_mdinhtml]: https://python-markdown.github.io/extensions/md_in_html/
 [pelican]: https://getpelican.com/
 [p1]: https://code.google.com/archive/p/markdown-downheader/
 [p2]: https://github.com/cprieto/mdx_downheader

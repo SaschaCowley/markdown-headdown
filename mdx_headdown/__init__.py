@@ -5,34 +5,38 @@ Supports a single optional argument, `offset`, which sets the number of
 heading levels to offset by. This will automatically be absolutised and 
 integerised.
 
-(c) 2018, Sascha Cowley under the MIT Licence.
+(c) 2018-2020, Sascha Cowley and contributors under the MIT Licence.
 """
 
 # Import relevant modules.
 from markdown.extensions import Extension
-from markdown.treeprocessors import Treeprocessor
+from markdown.postprocessors import Postprocessor
+from xml.etree import ElementTree as ET
 import re
 
 name = "mdx_headdown"
 
-class DowngradeHeadingsTreeprocessor(Treeprocessor):
-    """ Downgrade headings via the Treeprocessor interface. """
-    def run(self, root):
+class DowngradeHeadingsPostprocessor(Postprocessor):
+    """ Downgrade headings via the Preprocessor interface. """
+    def run(self, text):
         # Ensure the offset value is a positive (or zero) integer.
-        offset = abs(int(self.config['offset']))
-        
-        # Match headings 1-6 case insensitively if they're the entirety of the 
-        # string, and capture the heading number.
-        heading_pattern = re.compile('^h([1-6])$', re.I)
-        
-        for element in root:
-            # Attempt matching each tag against the heading pattern.
-            match = heading_pattern.match(element.tag)
-            if match:
-                # For all headings, increase their heading number by `offset`.
-                # If the new heading number is > 6, use 6 instead.
-                element.tag = 'h%d' % min(6, int(match.group(1))+offset)
+        self.offset = abs(int(self.config['offset']))
 
+        # Match headings 1-6 case insensitively, and capture the heading number.
+        heading_pattern = re.compile(r'<h([1-6])[^>]*>([^<]*)</h\1>', re.I)
+
+        return re.sub(heading_pattern, self.downgrade, text)
+
+    def downgrade(self, match):
+        element = ET.fromstring(match.group(0))
+
+        # Only process this heading if 'headdown="1"' (or missing...)
+        if element.attrib.get('headdown', 1) == 1:
+            # For all headings, increase their heading number by `offset`.
+            # If the new heading number is > 6, use 6 instead.
+            element.tag = 'h%d' % min(6, int(match.group(1))+self.offset)
+
+        return ET.tostring(element, encoding="unicode")
 
 class DowngradeHeadingsExtension(Extension):
     """ Setup the extension for usage. """
@@ -45,13 +49,13 @@ class DowngradeHeadingsExtension(Extension):
         super(DowngradeHeadingsExtension, self).__init__(**kwargs)
     
     def extendMarkdown(self, md):
-        # Register the plugin as a Treeprocessor. """
-        md.treeprocessors.register(
-            DowngradeHeadingsTreeprocessor(md), 
-            'downgradeheadings', 200
+        # Register the plugin as a Postprocessor. """
+        md.postprocessors.register(
+            DowngradeHeadingsPostprocessor(md),
+            'downgradeheadings', 5
         )
         # And give the actual processor access to the configuration.
-        DowngradeHeadingsTreeprocessor.config = self.getConfigs()
+        DowngradeHeadingsPostprocessor.config = self.getConfigs()
 
 
 def makeExtension(*args, **kwargs):
